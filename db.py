@@ -61,4 +61,23 @@ def init_db():
         FOREIGN KEY(user_id) REFERENCES users(id)
     )
     """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_id INTEGER,
+        sector TEXT,
+        brand TEXT,
+        name TEXT,
+        description TEXT,
+        amount TEXT,
+        price_entry REAL,
+        price_exit REAL,
+        production_date TEXT,
+        expiration_date TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
     conn.commit()
+
+
+
