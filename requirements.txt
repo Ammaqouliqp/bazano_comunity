@@ -1,0 +1,19 @@
+# Core Database
+SQLAlchemy==2.0.23
+alembic==1.13.1          # migration tool
+psycopg2-binary==2.9.9   # PostgreSQL driver (برای SQLite نیازی نداری)
+PyMySQL==1.1.0           # MySQL driver (اختیاری)
+
+# Data manipulation & AI-ready
+pandas==2.1.4
+numpy==1.26.3
+scikit-learn==1.3.2
+
+# Optional but useful for data/AI
+sqlalchemy-utils==0.41.1 # ابزارهای اضافی برای SQLAlchemy
+jupyterlab==4.0.9        # برای تحلیل و آزمایش داده‌ها
+matplotlib==3.8.2        # برای رسم نمودارها
+
+# Future-proof AI (در صورت نیاز بعدی، فعلاً اختیاری)
+torch==2.1.2             # PyTorch (اگر قصد داری مدل‌های ML/AI اجرا کنی)
+transformers==4.36.2     # HuggingFace برای NLP/LLM
