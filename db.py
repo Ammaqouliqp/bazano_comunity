@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 
-# products (exactly 8 fields as requested)
+# products (exactly 8 fields)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,5 +102,5 @@ CREATE TABLE IF NOT EXISTS logs (
 conn.commit()
 
 def init_db():
-    # placeholder in case we want to call explicitly
+    # called by main (keeps placeholder)
     pass

@@ -22,13 +22,13 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         from buyer import buyer_menu
         await buyer_menu(update, context)
     elif role == "manager":
-        from manager_menu import manager_menu
+        from manager import manager_menu
         await manager_menu(update, context)
     elif role == "admin":
-        from admin_menu import admin_menu
+        from admin import admin_menu
         await admin_menu(update, context)
     elif role == "dev":
-        from dev_menu import dev_menu
+        from dev import dev_menu
         await dev_menu(update, context)
     else:
         await update.message.reply_text("⚠️ نقش شما تعریف نشده.")
