@@ -1,10 +1,13 @@
 # config.py
+# Fill these values before running
 TOKEN = "8251595621:AAFlLuEXqt6v0w6pJUgF_pdGd9IXKufPtiw"
 REGISTER_CODE = "Havayekhoobarodarim"
 
-# Set these Telegram user IDs (integers). Replace with real IDs.
-BUYER_ID = 5172256332
-SELLER_ID = 5172256332
-MANAGER_ID = 5172256332
-ADMIN_ID = 5172256332
-DEV_ID = 5172256332  # your Telegram user id (developer)
+# Developer Telegram user id (integer) — only this ID can access dev menu
+DEV_ID = 5172256332
+
+# Optional: if you want to predefine specific test IDs, put them here; otherwise leave None
+# BUYER_ID = ...
+# SELLER_ID = ...
+# MANAGER_ID = ...
+# ADMIN_ID = ...

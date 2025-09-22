@@ -14,11 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     lastname TEXT,
     phonenumber TEXT UNIQUE,
     password TEXT,
-    role TEXT DEFAULT 'member'
+    role TEXT DEFAULT 'buyer'
 )
 """)
 
-# products
+# products (exactly 8 fields as requested)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,13 +29,11 @@ CREATE TABLE IF NOT EXISTS products (
     expire_date TEXT,
     quantity TEXT,
     price_entry REAL,
-    price_exit REAL,
-    created_by INTEGER,
-    created_at TEXT
+    price_exit REAL
 )
 """)
 
-# requests (purchase requests from buyers)
+# purchase requests (available to everyone)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +44,7 @@ CREATE TABLE IF NOT EXISTS requests (
 )
 """)
 
-# transactions
+# transactions (skeleton)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,20 +53,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     seller INTEGER,
     date TEXT,
     sector TEXT,
-    products TEXT,
-    buyer_score INTEGER,
-    buyer_feedback TEXT
-)
-""")
-
-# transaction items
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS transaction_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    transaction_id INTEGER,
-    name TEXT,
-    seller_price REAL,
-    buyer_price REAL
+    products TEXT
 )
 """)
 
@@ -117,5 +102,5 @@ CREATE TABLE IF NOT EXISTS logs (
 conn.commit()
 
 def init_db():
-    # kept for compatibility: calling this will ensure tables exist
+    # placeholder in case we want to call explicitly
     pass
