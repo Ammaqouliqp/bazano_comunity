@@ -16,10 +16,10 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # هدایت بر اساس نقش
     if role == "seller":
-        from seller_menu import seller_menu
+        from seller import seller_menu
         await seller_menu(update, context)
     elif role == "buyer":
-        from buyer_menu import buyer_menu
+        from buyer import buyer_menu
         await buyer_menu(update, context)
     elif role == "manager":
         from manager_menu import manager_menu

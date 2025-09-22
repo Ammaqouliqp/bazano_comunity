@@ -1,44 +1,35 @@
-# menus/manager_menu.py
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
-from auth import sessions
-from logs import get_logs
-from db import cursor
-
-def get_user_by_tg(tg_id):
-    phone = sessions.get(tg_id)
-    if not phone:
-        return None
-    cursor.execute("SELECT id, firstname, lastname, role FROM users WHERE phonenumber=?", (phone,))
-    return cursor.fetchone()
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
 
 async def manager_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.callback_query:
-        await update.callback_query.answer()
-        target = update.callback_query.message
-    else:
-        target = update.message
-    user = get_user_by_tg(update.effective_user.id)
-    if not user or user[3] != "manager":
-        await target.reply_text("⛔ شما مدیر نیستید.")
-        return
-    kb = [
-        [InlineKeyboardButton("📦 مدیریت محصولات", callback_data="admin:manage_products")],
-        [InlineKeyboardButton("👥 مدیریت کاربران", callback_data="manager:users")],
-        [InlineKeyboardButton("📜 تاریخچه فعالیت‌ها", callback_data="manager:logs")],
-        [InlineKeyboardButton("📥 درخواست محصول (مشترک)", callback_data="common:request")],
-        [InlineKeyboardButton("🔙 بازگشت", callback_data="common:back")],
+    keyboard = [
+        [InlineKeyboardButton("📦 مدیریت محصولات", callback_data="manager_products")],
+        [InlineKeyboardButton("📊 گزارش‌ها", callback_data="manager_reports")],
+        [InlineKeyboardButton("🛒 منوی خریدار", callback_data="go_buyer")],
+        [InlineKeyboardButton("🔙 بازگشت", callback_data="back_main")]
     ]
-    await target.reply_text("🧾 منوی مدیریت:", reply_markup=InlineKeyboardMarkup(kb))
+    if update.message:
+        await update.message.reply_text("📋 منوی مدیر:", reply_markup=InlineKeyboardMarkup(keyboard))
+    else:
+        await update.callback_query.edit_message_text("📋 منوی مدیر:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-async def manager_logs_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    cq = update.callback_query
-    await cq.answer()
-    rows = get_logs(50)
-    if not rows:
-        await cq.message.reply_text("📭 لاگی وجود ندارد.")
-        return
-    text = "📜 تاریخچه فعالیت‌ها:\n\n"
-    for r in rows:
-        text += f"👤 کاربر {r[1]} | عملیات: {r[2]} | جزئیات: {r[3]} | ⏰ {r[4]}\n\n"
-    await cq.message.reply_text(text)
+async def manager_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    await q.answer()
+    if q.data == "manager_products":
+        await q.edit_message_text("⚙ بخش مدیریت محصولات...")
+    elif q.data == "manager_reports":
+        await q.edit_message_text("📊 گزارش‌ها...")
+    elif q.data == "go_buyer":
+        from buyer import buyer_menu
+        await buyer_menu(update, context)
+    elif q.data == "back_main":
+        await q.edit_message_text("🔙 برگشتی به منوی اصلی...")
+
+def get_manager_handlers():
+    return [
+        CommandHandler("manager", manager_menu),
+        CallbackQueryHandler(manager_callback, pattern="^manager_"),
+        CallbackQueryHandler(manager_callback, pattern="^go_buyer$"),
+        CallbackQueryHandler(manager_callback, pattern="^back_main$"),
+    ]

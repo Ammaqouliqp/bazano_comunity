@@ -1,49 +1,38 @@
-# menus/dev_menu.py
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
 from config import DEV_ID
-from logs import get_logs, get_errors
-import importlib, sys
+from logs import read_logs
 
 async def dev_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    uid = update.effective_user.id
-    if uid != DEV_ID:
-        await update.message.reply_text("⛔ شما توسعه‌دهنده نیستید.")
+    if update.effective_user.id != DEV_ID:
+        await update.message.reply_text("⛔ دسترسی ندارید.")
         return
-    kb = [
-        [InlineKeyboardButton("📜 آخرین لاگ‌ها (50)", callback_data="dev:logs")],
-        [InlineKeyboardButton("⚠️ خطاها (20)", callback_data="dev:errors")],
-        [InlineKeyboardButton("♻️ ری‌لود ماژول‌ها", callback_data="dev:reload")],
-        [InlineKeyboardButton("🔙 بازگشت", callback_data="common:back")],
+    keyboard = [
+        [InlineKeyboardButton("📜 لاگ‌ها", callback_data="dev_logs")],
+        [InlineKeyboardButton("🛒 منوی خریدار", callback_data="go_buyer")],
+        [InlineKeyboardButton("🔙 بازگشت", callback_data="back_main")]
     ]
-    await update.message.reply_text("👨‍💻 منوی توسعه‌دهنده:", reply_markup=InlineKeyboardMarkup(kb))
+    if update.message:
+        await update.message.reply_text("👨‍💻 منوی توسعه‌دهنده:", reply_markup=InlineKeyboardMarkup(keyboard))
+    else:
+        await update.callback_query.edit_message_text("👨‍💻 منوی توسعه‌دهنده:", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def dev_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    cq = update.callback_query
-    await cq.answer()
-    uid = cq.from_user.id
-    if uid != DEV_ID:
-        await cq.message.reply_text("⛔ دسترسی ندارید.")
-        return
-    if cq.data == "dev:logs":
-        rows = get_logs(50)
-        if not rows:
-            await cq.message.reply_text("📭 لاگی وجود ندارد.")
-            return
-        text = "📜 لاگ‌ها:\n\n" + "\n\n".join([f"#{r[0]} | user {r[1]} | {r[2]} | {r[3]} | {r[4]}" for r in rows])
-        await cq.message.reply_text(text)
-    elif cq.data == "dev:errors":
-        rows = get_errors(50)
-        if not rows:
-            await cq.message.reply_text("📭 خطایی ثبت نشده.")
-            return
-        text = "⚠️ خطاها:\n\n" + "\n\n".join([f"#{r[0]} | user {r[1]} | {r[2]} | {r[3]} | {r[4]}" for r in rows])
-        await cq.message.reply_text(text)
-    elif cq.data == "dev:reload":
-        mods = ["auth","products","menus.menu_utils","menus.buyer_menu","menus.seller_menu","menus.manager_menu","menus.admin_menu","menus.dev_menu"]
-        reloaded = []
-        for m in mods:
-            if m in sys.modules:
-                importlib.reload(sys.modules[m])
-                reloaded.append(m)
-        await cq.message.reply_text("♻️ ماژول‌ها ری‌لود شدند: " + ", ".join(reloaded))
+    q = update.callback_query
+    await q.answer()
+    if q.data == "dev_logs":
+        logs = read_logs()
+        await q.edit_message_text("📜 لاگ‌ها:\n\n" + "\n".join(logs[-10:]))
+    elif q.data == "go_buyer":
+        from buyer import buyer_menu
+        await buyer_menu(update, context)
+    elif q.data == "back_main":
+        await q.edit_message_text("🔙 برگشتی به منوی اصلی...")
+
+def get_dev_handlers():
+    return [
+        CommandHandler("dev", dev_menu),
+        CallbackQueryHandler(dev_callback, pattern="^dev_"),
+        CallbackQueryHandler(dev_callback, pattern="^go_buyer$"),
+        CallbackQueryHandler(dev_callback, pattern="^back_main$"),
+    ]
