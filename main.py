@@ -6,11 +6,11 @@ from db import init_db
 # import get handlers from modules
 from auth import get_auth_handlers
 from products import get_product_handlers
-from buyer import get_buyer_handlers
-from seller import get_seller_handlers
-from admin_menu import get_admin_handlers
-from manager_menu import get_manager_handlers
-from dev_menu import get_dev_handlers
+from menus.buyer_menu import get_buyer_handlers
+from menus.seller_menu import get_seller_handlers
+from menus.admin_menu import get_admin_handlers
+from menus.manager_menu import get_manager_handlers
+from menus.dev_menu import get_dev_handlers
 from transactions import get_transaction_handlers
 
 def main():
