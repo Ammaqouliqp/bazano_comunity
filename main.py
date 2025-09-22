@@ -1,7 +1,7 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from config import TOKEN
 
-from auth import get_auth_handlers, text_handler
+from auth import get_auth_handlers
 from buyer import get_buyer_handlers
 from seller import get_seller_handlers
 from admin_menu import get_admin_handlers
@@ -14,7 +14,6 @@ def main():
     # Auth
     for h in get_auth_handlers():
         app.add_handler(h)
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     # Buyer (همه دارن)
     for h in get_buyer_handlers():
