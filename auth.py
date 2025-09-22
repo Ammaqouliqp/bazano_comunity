@@ -62,7 +62,7 @@ async def reg_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # after successful register, show menus (role-based)
         await update.message.reply_text("✅ ثبت‌نام با موفقیت انجام شد. شما وارد حساب شدید.", reply_markup=ReplyKeyboardRemove())
         # show available menus to user
-        from menus.menu_utils import send_role_menus_after_auth
+        from menu_utils import send_role_menus_after_auth
         await send_role_menus_after_auth(update, context, phone)
     except Exception as e:
         await update.message.reply_text("❌ خطا در ثبت‌نام — احتمالاً شماره تکراری است.")
@@ -91,7 +91,7 @@ async def login_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
         add_log(user[0], "LOGIN", f"telegram={update.effective_user.id}")
         await update.message.reply_text(f"✅ ورود موفق. خوش آمدید {user[1]} {user[2]}", reply_markup=ReplyKeyboardRemove())
         # show role menus
-        from menus.menu_utils import send_role_menus_after_auth
+        from menu_utils import send_role_menus_after_auth
         await send_role_menus_after_auth(update, context, phone)
     else:
         await update.message.reply_text("❌ شماره یا رمز اشتباه است.", reply_markup=ReplyKeyboardRemove())
@@ -134,7 +134,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         role = r[0] if r else None
 
     # import helper to build buttons
-    from menus.menu_utils import build_help_buttons
+    from menu_utils import build_help_buttons
     kb_text, kb_markup = build_help_buttons(role)
     await update.message.reply_text(kb_text, reply_markup=kb_markup)
 

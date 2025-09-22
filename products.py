@@ -304,7 +304,7 @@ def get_product_handlers():
     handlers.append(CallbackQueryHandler(products_menu_cb, pattern="^products:menu$|^products_menu$"))
     # add product conv
     add_conv = ConversationHandler(
-        entry_points=[CommandHandler("add_product", add_start), CallbackQueryHandler(add_start, pattern="^products:add$")],
+        entry_points=[CommandHandler("add_product", add_product), CallbackQueryHandler(add_product, pattern="^products:add$")],
         states={
             ADD_BRAND: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_brand)],
             ADD_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_name)],
