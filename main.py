@@ -1,29 +1,49 @@
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+# main.py
+from telegram.ext import Application
 from config import TOKEN
-from auth import get_auth_handlers  
-from menus.dev_menu import dev_menu, dev_callback
-from menus.manager_menu import manager_menu, manager_callback
-from telegram.ext import CallbackQueryHandler, ConversationHandler, MessageHandler, filters
-from auth import start, register_start, ask_firstname, ask_lastname, ask_phone, ask_pass, login_start, ask_login_phone, ask_login_pass
+from db import init_db
 
+# import get handlers from modules
+from auth import get_auth_handlers
+from products import get_product_handlers
+from buyer import get_buyer_handlers
+from seller import get_seller_handlers
+from admin_menu import get_admin_handlers
+from manager_menu import get_manager_handlers
+from dev_menu import get_dev_handlers
+from transactions import get_transaction_handlers
 
 def main():
+    init_db()
     app = Application.builder().token(TOKEN).build()
 
-    # هندلرهای auth (ثبت‌نام/ورود/پروفایل/خروج/راهنما)
-    app.add_handlers(get_auth_handlers())
+    # register handlers (each module returns list of handlers)
+    for h in get_auth_handlers():
+        app.add_handler(h)
 
-    # منوها
-    app.add_handler(CommandHandler("dev", dev_menu))
-    app.add_handler(CommandHandler("manager", manager_menu))
+    for h in get_product_handlers():
+        app.add_handler(h)
 
-    # کال‌بک‌ها
-    app.add_handler(CallbackQueryHandler(dev_callback, pattern="^dev_"))
-    app.add_handler(CallbackQueryHandler(manager_callback, pattern="^manager_"))
+    for h in get_buyer_handlers():
+        app.add_handler(h)
 
-    # اجرا
+    for h in get_seller_handlers():
+        app.add_handler(h)
+
+    for h in get_admin_handlers():
+        app.add_handler(h)
+
+    for h in get_manager_handlers():
+        app.add_handler(h)
+
+    for h in get_dev_handlers():
+        app.add_handler(h)
+
+    for h in get_transaction_handlers():
+        app.add_handler(h)
+
+    print("🤖 Bot is running...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()

@@ -1,74 +1,34 @@
-import sqlite3
+# transactions.py
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, CallbackQueryHandler, ContextTypes
+from db import cursor, conn
+from logs import add_log
+from auth import sessions
+import json
 
-conn = sqlite3.connect("shop.db", check_same_thread=False)
-cursor = conn.cursor()
+def get_user(tg_id):
+    phone = sessions.get(tg_id)
+    if not phone:
+        return None
+    cursor.execute("SELECT id, firstname, lastname, role FROM users WHERE phonenumber=?", (phone,))
+    return cursor.fetchone()
 
-# جدول کاربران
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    firstname TEXT,
-    lastname TEXT,
-    phonenumber TEXT UNIQUE,
-    password TEXT,
-    role TEXT DEFAULT 'buyer'
-)
-""")
-# جدول تراکنش‌ها
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    buyer INTEGER,
-    seller INTEGER,
-    date TEXT,
-    sector TEXT,
-    buyer_rating INTEGER,
-    buyer_feedback TEXT
-)
-""")
+async def view_transactions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = get_user(update.effective_user.id)
+    if not user:
+        await update.message.reply_text("⚠️ ابتدا وارد شوید.")
+        return
+    cursor.execute("SELECT id, transaction_code, buyer, seller, date FROM transactions ORDER BY id DESC LIMIT 20")
+    rows = cursor.fetchall()
+    if not rows:
+        await update.message.reply_text("📭 تراکنشی موجود نیست.")
+        return
+    text = "📊 تراکنش‌ها:\n\n"
+    for r in rows:
+        text += f"#{r[0]} | code:{r[1]} | buyer:{r[2]} | seller:{r[3]} | {r[4]}\n"
+    await update.message.reply_text(text)
 
-# جدول محصولات تراکنش
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS transaction_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    transaction_id INTEGER,
-    name TEXT,
-    seller_price REAL,
-    buyer_price REAL
-)
-""")
-
-# جدول نظرات
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS feedbacks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    transaction_id INTEGER,
-    message TEXT,
-    date TEXT
-)
-""")
-
-# جدول پشتیبانی
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS support (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    message TEXT,
-    date TEXT
-)
-""")
-
-# جدول انتقادات و پیشنهادات
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS suggestions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    message TEXT,
-    date TEXT
-)
-""")
-
-conn.commit()
-def get_db():
-    return conn, cursor
+def get_transaction_handlers():
+    return [
+        CommandHandler("view_transactions", view_transactions),
+    ]

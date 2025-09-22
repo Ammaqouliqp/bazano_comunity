@@ -1,9 +1,12 @@
+# db.py
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("shop.db", check_same_thread=False)
+DB_PATH = Path("shop.db")
+conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
 cursor = conn.cursor()
 
-# کاربران
+# users
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -11,11 +14,11 @@ CREATE TABLE IF NOT EXISTS users (
     lastname TEXT,
     phonenumber TEXT UNIQUE,
     password TEXT,
-    role TEXT DEFAULT 'buyer'
+    role TEXT DEFAULT 'member'
 )
 """)
 
-# محصولات
+# products
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,27 +27,41 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     manufacture_date TEXT,
     expire_date TEXT,
-    quantity REAL,
+    quantity TEXT,
     price_entry REAL,
     price_exit REAL,
-    created_by INTEGER
+    created_by INTEGER,
+    created_at TEXT
 )
 """)
 
-# تراکنش‌ها
+# requests (purchase requests from buyers)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    subject TEXT,
+    message TEXT,
+    date TEXT
+)
+""")
+
+# transactions
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transaction_code TEXT,
     buyer INTEGER,
     seller INTEGER,
     date TEXT,
     sector TEXT,
-    buyer_rating INTEGER,
+    products TEXT,
+    buyer_score INTEGER,
     buyer_feedback TEXT
 )
 """)
 
-# آیتم‌های تراکنش
+# transaction items
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transaction_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +72,38 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 )
 """)
 
-# لاگ‌ها
+# feedbacks
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS feedbacks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    transaction_id INTEGER,
+    message TEXT,
+    date TEXT
+)
+""")
+
+# support
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS support (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    message TEXT,
+    date TEXT
+)
+""")
+
+# suggestions
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS suggestions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    message TEXT,
+    date TEXT
+)
+""")
+
+# logs
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,3 +115,7 @@ CREATE TABLE IF NOT EXISTS logs (
 """)
 
 conn.commit()
+
+def init_db():
+    # kept for compatibility: calling this will ensure tables exist
+    pass
