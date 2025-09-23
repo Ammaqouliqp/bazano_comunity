@@ -1,6 +1,6 @@
 # config.py
 # Fill these values before running
-TOKEN = ""
+TOKEN = "8251595621:AAFlLuEXqt6v0w6pJUgF_pdGd9IXKufPtiw"
 REGISTER_CODE = "Havayekhoobarodarim"
 
 # Developer Telegram user id (integer) — only this ID can access dev menu
