@@ -12,7 +12,10 @@ from seller import get_seller_handlers
 from manager import get_manager_handlers
 from admin import get_admin_handlers
 from dev import get_dev_handlers
+from warnings import filterwarnings
+from telegram.warnings import PTBUserWarning
 
+filterwarnings(action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning)
 def main():
     init_db()
     app = Application.builder().token(TOKEN).build()
@@ -29,7 +32,7 @@ def main():
     for h in get_request_handlers():
         app.add_handler(h)
 
-    # role menus & callbacks
+    # role menus & callbacksz
     for h in get_buyer_handlers():
         app.add_handler(h)
     for h in get_seller_handlers():

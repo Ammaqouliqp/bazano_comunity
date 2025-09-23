@@ -21,7 +21,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🔐 ورود", callback_data="auth_login")],
         [InlineKeyboardButton("📖 راهنما", callback_data="auth_help")],
     ]
-    await update.message.reply_text("🔸 به ربات فروشگاه خوش آمدید!\nیک گزینه انتخاب کنید:", reply_markup=InlineKeyboardMarkup(kb))
+    await update.message.reply_text("🔸 به بازانــو خوش آمدید!\nیک گزینه انتخاب کنید:", reply_markup=InlineKeyboardMarkup(kb))
 
 # start callbacks
 async def auth_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -35,7 +35,7 @@ async def auth_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return LOGIN_PHONE
     if q.data == "auth_help":
         # Build help menu (buyer + placeholders)
-        text = "📖 راهنما:\n\n— منوی خریدار —\n• خریدهای من\n• ثبت نظر\n• پشتیبانی\n• درخواست محصول\n\nبرای منوی نقش‌های دیگر از منوی اصلی استفاده کنید."
+        text = "📱 راهنمای ورود و ثبت‌نام:\n\n— ورود —\n• سپس رمز عبور خود را وارد نمایید\n\n— ثبت‌نام —\n• اطلاعات خواسته‌شده را وارد کنید\n• کد را از کانال بازانو https://t.me/baza_no دریافت کنید\n• یک رمز عبور دلخواه انتخاب نمایید"
         await q.message.reply_text(text)
         return ConversationHandler.END
     return ConversationHandler.END
@@ -48,48 +48,58 @@ async def reg_first(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reg_last(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["lastname"] = update.message.text.strip()
-    await update.message.reply_text(f"🔑 لطفاً کد ثبت‌نام را وارد کنید (کد را از مدیریت دریافت کنید):")
-    return REG_PHONE  # reusing state to get code then phone (we'll check)
+    await update.message.reply_text("🔑 لطفاً کد ثبت‌نام را وارد کنید (کد را از مدیریت دریافت کنید):")
+    return REG_PHONE
 
 async def reg_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     txt = update.message.text.strip()
-    # check code match or treat it as phone if code not required: our flow requires REGISTER_CODE first
     if txt == REGISTER_CODE:
-        await update.message.reply_text("📱 حالا شماره تلفن خود را وارد کنید (مثال: +994501234567):")
-        return REG_PASS  # move to ask password after phone (using REG_PASS state for phone storage)
+        await update.message.reply_text("📱 حالا شماره تلفن خود را وارد کنید):")
+        return REG_PASS  # بعد از شماره میریم سراغ پسورد
     else:
-        # user entered phone directly by mistake; ask to enter code
-        await update.message.reply_text("❌ کد اشتباه است. لطفاً کد ثبت‌نام را وارد کنید:")
-        return REG_PHONE
+        await update.message.reply_text("❌ کد اشتباه است. لطفاً دوباره وارد کنید:")
+        return REG_PHONE    
+
+def normalize_phone(phone: str) -> str | None:
+    phone = phone.strip()
+    if phone.startswith("+98") and phone[3:].isdigit() and len(phone) == 13:
+        return phone
+    elif phone.startswith("0") and phone[1:].isdigit() and len(phone) == 11:
+        return "+98" + phone[1:]
+    else:
+        return None
 
 async def reg_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # in this flow we asked phone previously; but to keep flow simple:
-    # we'll request phone then password in two steps:
-    # if we reached here because code matched, we expect phone in previous step; handle both
-    # to keep code robust, check if phone stored
-    if "phone_stage" not in context.user_data:
-        # previous was code -> now this message is phone
-        phone = update.message.text.strip()
+    # اول مرحله دریافت شماره
+    if "phone" not in context.user_data:
+        raw_phone = update.message.text.strip()
+        phone = normalize_phone(raw_phone)
+        if not phone:
+            await update.message.reply_text("❌ شماره تلفن نامعتبر است. دوباره وارد کنید (مثال: 09121234567 ):")
+            return REG_PASS
         context.user_data["phone"] = phone
         await update.message.reply_text("🔒 حالا یک رمز عبور انتخاب کنید:")
-        context.user_data["phone_stage"] = True
         return REG_PASS
+    # بعدش رمز عبور
     else:
-        # this message is password
         password = update.message.text.strip()
-        phone = context.user_data.get("phone")
+        phone = context.user_data["phone"]
         firstname = context.user_data.get("firstname", "")
         lastname = context.user_data.get("lastname", "")
 
-        # create user
         try:
-            cursor.execute("INSERT INTO users (firstname, lastname, phonenumber, password, role) VALUES (?, ?, ?, ?, ?)",
-                           (firstname, lastname, phone, hash_password(password), "buyer"))
+            cursor.execute(
+                "INSERT INTO users (firstname, lastname, phonenumber, password, role) VALUES (?, ?, ?, ?, ?)",
+                (firstname, lastname, phone, hash_password(password), "buyer")
+            )
             conn.commit()
             user_id = cursor.lastrowid
             sessions[update.effective_user.id] = phone
             add_log(user_id, "REGISTER", f"telegram={update.effective_user.id}")
-            await update.message.reply_text(f"✅ ثبت‌نام موفق! خوش آمدید {firstname} {lastname}", reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text(
+                f"✅ ثبت‌نام موفق! خوش آمدید {firstname} {lastname}",
+                reply_markup=ReplyKeyboardRemove()
+            )
         except Exception as e:
             await update.message.reply_text("❌ خطا در ثبت‌نام — احتمالاً شماره تکراری است.")
             add_log(None, "ERROR", f"register_error: {e}")
@@ -97,7 +107,12 @@ async def reg_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # login flow
 async def login_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["phone"] = update.message.text.strip()
+    raw_phone = update.message.text.strip()
+    phone = normalize_phone(raw_phone)
+    if not phone:
+        await update.message.reply_text("❌ شماره تلفن نامعتبر است. دوباره وارد کنید (مثال: 09121234567 ):")
+        return LOGIN_PHONE
+    context.user_data["phone"] = phone
     await update.message.reply_text("🔒 رمز عبور را وارد کنید:")
     return LOGIN_PASS
 
